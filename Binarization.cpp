@@ -37,7 +37,17 @@ float slowMean(Mat& inputimg, int x, int y, int window_half_length)
         for (int j = 0; j < 2 * window_half_length + 1; j++)
         {
             int pixel;
+            if ((y - window_half_length + i <= 0) || (x - window_half_length + j <= 0))
+            {
+                continue;
+            }
+            else if ((y - window_half_length + i > inputimg.size[1]) || (x - window_half_length + j > inputimg.size[0]))
+            {
+                continue;
+            }
+            
             pixel = (int)inputimg.at<uchar>(y - window_half_length + i, x - window_half_length + j);
+            
             tempsum += pixel;
         }
     }
@@ -50,12 +60,23 @@ float slowMean(Mat& inputimg, int x, int y, int window_half_length)
 float STD(Mat& InputImg, int x, int y, int window_half_length, float mean)
 {
     float tempsum = 0;
+
     for (int i = 0; i < 2 * window_half_length + 1; i++)
     {
         for (int j = 0; j < 2 * window_half_length + 1; j++)
         {
             int pixel;
+            //cout << "program arrived here" << endl;
+            if ((y - window_half_length + i <= 0) || (x - window_half_length + j <= 0))
+            {
+                continue;
+            }
+            else if ((y - window_half_length + i > InputImg.size[1]) || (x - window_half_length + j > InputImg.size[0]))
+            {
+                continue;
+            }
             pixel = (int)InputImg.at<uchar>(y - window_half_length + i, x - window_half_length + j);
+            //cout << "program at done" << endl;
             tempsum += powf(pixel - mean, 2);
         }
     }
@@ -66,15 +87,21 @@ float STD(Mat& InputImg, int x, int y, int window_half_length, float mean)
     return std;
 }
 
+//int Min_Avg_Pixel_Black(Mat inpImg)
+//{
+//
+//}
+
+const int min_avg_pixel_black = 60;
+
 Mat Sauvola(Mat inpImg, int window_half_length, float k)
 {
     cout << "here is Sauvola" << endl;
-    cout << "type is " << inpImg.type() << endl;
     Mat integral;
     Mat resImg;
     inpImg.copyTo(resImg);
-    int nYOffSet = 3;
-    int nXOffSet = 3;
+    int nYOffSet = window_half_length;
+    int nXOffSet = window_half_length;
     cv::integral(inpImg, integral);
     for (int y = 0; y < inpImg.rows; y += nYOffSet)
     {
@@ -82,8 +109,10 @@ Mat Sauvola(Mat inpImg, int window_half_length, float k)
         {
             //float fmean = fastMean(integral, x, y, window_half_length);
             float fmean = slowMean(inpImg, x, y, window_half_length);
+            //cout << "done fastmean" << endl;
             float std;
             std = STD(inpImg, x, y, window_half_length, fmean);
+            //cout << "done STD" << endl;
             float fthreshold = (float)(fmean * (1 + k * (std / 128 - 1)));
             
             //if (x % 20 == 0) { cout << "x is " << x << endl << "fthreshold is " << fthreshold << endl << "fmean is :" << fmean << endl << "std is :" << std << endl;}
@@ -97,10 +126,22 @@ Mat Sauvola(Mat inpImg, int window_half_length, float k)
                 while (nCurX < nNextX && nCurX < inpImg.cols)
                 {
                     //cout << "d2" << endl;
-                    uchar val = inpImg.at<uchar>(nCurY, nCurX) < fthreshold;
+                    uchar val = inpImg.at<uchar>(nCurY, nCurX);
+                    if (val <= min_avg_pixel_black)
+                    {
+                        resImg.at<uchar>(nCurY, nCurX) = 0;
+                    }
+                    else if (val <= fthreshold)
+                    {
+                        resImg.at<uchar>(nCurY, nCurX) = 0;
+                    }
+                    else
+                    {
+                        resImg.at<uchar>(nCurY, nCurX) = 255;
+                    }
                     //if (val == 0) { cout << "%%%%%%%%%%%%%" << endl; }
                     //cout << "d3" << endl;
-                    resImg.at<uchar>(nCurY, nCurX) = (val == 0 ? 255: 0);
+                    //resImg.at<uchar>(nCurY, nCurX) = (val == 0 ? 255: 0);
                     //cout << "d4" << endl;
                     nCurX++;
                 }
