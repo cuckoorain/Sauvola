@@ -2,12 +2,22 @@
 Provide a Sauvola solution in C++ and based on Opencv3.1
 # Usage:
 
-```
-Mat Sauvola(Mat inpImg, int window_half_length, float k)
+for real time program:
 
 ```
+Mat Sauvola_coarse(Mat inpImg, int window_half_length, float k, float super_std)
+```
 
-`inpImg` is the grayscale image, `window_half_length` is half of the window size, which is `r/2` in the following text, `k` is the same as the `k` in the threshold calculation below. The output is the binary image after Sauvola thresholding.
+`inpImg` is the grayscale image, `window_half_length` is half of the window size, which is `r/2` in the following text, `k` is the same as the `k` in the threshold calculation below. The output is the binary image after Sauvola thresholding. `super_std` is for avergae std, so we can accelerate this program.
+
+if your senario is fixed, I recommend for first run fine-grained and then calculate the avergae std, use it as `super_std`.
+
+for fine-grained operation:
+```
+Mat Sauvola_fine(Mat inpImg, int window_half_length, float k)
+```
+
+
 
 Example:
 
